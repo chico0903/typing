@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Typing Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎬 YouTube 타자 연습 게임</h1>
+      <p>유튜브 링크와 자막(SRT/VTT)을 넣어 영상과 함께 타자를 연습해보세요!</p>
+    </header>
+
+    <!-- 입력 섹션 -->
+    <section class="input-section">
+      <div class="input-group">
+        <label for="youtube-url">유튜브 URL</label>
+        <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=...">
+      </div>
+      <div class="input-group">
+        <label for="subtitle-file">자막 파일 (.srt 또는 .vtt)</label>
+        <input type="file" id="subtitle-file" accept=".srt, .vtt">
+      </div>
+      <button id="start-btn">게임 시작하기</button>
+    </section>
+
+    <!-- 게임 플레이 섹션 -->
+    <main class="game-section hidden" id="game-section">
+      <div class="video-wrapper">
+        <div id="player"></div>
+      </div>
+
+      <div class="typing-display">
+        <div class="target-text" id="target-text">게임 준비 완료! 엔터를 누르면 시작합니다.</div>
+        <input type="text" id="typing-input" placeholder="위 문장을 똑같이 입력하세요..." autocomplete="off">
+        <div class="stats">
+          <span>진행도: <strong id="progress">0 / 0</strong></span>
+          <span>정확도: <strong id="accuracy">100%</strong></span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="app.js"></script>
+</body>
+</html>
