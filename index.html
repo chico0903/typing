@@ -12,20 +12,20 @@
       --border-color: #e2e8f0;
       --input-bg: #f8fafc;
       --input-text: #000000;
-      --main-color: #3B82F6; /* 요청하신 파란색 통일 */
+      --main-color: #50C8C6; /* 초록/민트색 복구 */
       --stat-label: #888;
       --stat-item: #111;
       --error-color: #F17864;
     }
 
     [data-theme="dark"] {
-      --bg-color: #08090a; /* 칠판색(초록빛) 완전 제거 -> 딥 리얼 블랙 톤 */
+      --bg-color: #08090a; /* 딥 블랙 톤 */
       --text-color: #f1f5f9;
       --panel-bg: #121417;
       --border-color: #1e232a;
       --input-bg: #1a1d24;
       --input-text: #ffffff;
-      --main-color: #3B82F6; /* 다크모드에서도 파란색 유지 */
+      --main-color: #50C8C6; /* 다크모드 민트/초록색 */
       --stat-label: #94a3b8;
       --stat-item: #f8fafc;
     }
@@ -259,7 +259,6 @@
       height: 100%;
     }
 
-    /* 컨트롤 바 그리드 정렬 (버튼 정중앙 배치) */
     .control-bar {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
@@ -346,13 +345,13 @@
       color: #64748b;
     }
 
-    /* 맞았을 때 색상: 연두색 완전 제거 ➔ 원래 지시하신 파란색(#3B82F6) 적용 */
+    /* 타자 맞은 글자 초록/민트색(#50C8C6) 복구 */
     .char-correct {
-      color: #3B82F6;
+      color: #50C8C6;
       font-weight: 600;
     }
 
-    /* 틀렸을 때 색상: 빨간색(#F17864) */
+    /* 틀린 글자 빨간색 */
     .char-incorrect {
       color: #F17864;
       font-weight: 600;
@@ -376,8 +375,8 @@
     }
 
     #typing-input:focus {
-      border-color: #3B82F6;
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+      border-color: #50C8C6;
+      box-shadow: 0 0 10px rgba(80, 200, 198, 0.25);
     }
 
     #typing-input.error-border {
@@ -387,23 +386,20 @@
     }
   </style>
 </head>
-<body data-theme="dark"> <!-- 기본을 눈이 편안한 더 거무스름한 다크 모드로 설정 -->
-  <!-- 다크모드 토글 버튼 -->
+<body data-theme="dark">
   <button class="theme-toggle-btn" id="theme-toggle">☀️ 라이트 모드</button>
 
-  <!-- 메인 랜딩 화면 -->
   <div class="landing-container" id="landing-section">
     <h1 class="main-title">TYPING GAME</h1>
     <div class="landing-form">
       <label for="youtube-url">유튜브 영상 URL</label>
-      <input type="text" id="youtube-url" placeholder="유튜브 URL을 입력하면 영상 자막을 자동으로 연동합니다." value="https://www.youtube.com/watch?v=R9j5H7m5S8k">
+      <input type="text" id="youtube-url" placeholder="유튜브 URL을 입력하면 자막을 추출합니다." value="https://www.youtube.com/watch?v=R9j5H7m5S8k">
       
       <button id="start-btn">GAME START</button>
-      <div id="loading-msg" class="loading-msg hidden">유튜브 자막 데이터를 연동하는 중입니다... ⏳</div>
+      <div id="loading-msg" class="loading-msg hidden">유튜브 자막 데이터를 추출하는 중입니다... ⏳</div>
     </div>
   </div>
 
-  <!-- 게임 완료 모달 -->
   <div class="modal-overlay hidden" id="restart-modal">
     <div class="modal-content">
       <h2 class="modal-title">COMPLETE!</h2>
@@ -417,7 +413,6 @@
     </div>
   </div>
 
-  <!-- 게임 플레이 화면 -->
   <div class="app-container hidden" id="game-section">
     <div class="video-section">
       <div class="video-wrapper">
@@ -464,7 +459,6 @@
     let targetVideoId = 'R9j5H7m5S8k';
     let audioCtx = null;
 
-    // 다크 모드 토글
     const themeToggleBtn = document.getElementById('theme-toggle');
     themeToggleBtn.addEventListener('click', () => {
       const body = document.body;
@@ -525,22 +519,22 @@
       return count;
     }
 
-    // 실제 유튜브 데이터 및 자막 트랙 싱크 파싱
+    // 유튜브 웹 자막 다중 타깃 파서 (입력된 영상 URL의 자막을 정확히 가져옴)
     async function autoFetchYoutubeSubtitles(videoId) {
-      const proxies = [
+      const endpoints = [
         `https://corsproxy.io/?https://www.youtube.com/api/timedtext?v=${videoId}&lang=ko`,
         `https://corsproxy.io/?https://www.youtube.com/api/timedtext?v=${videoId}&lang=en`,
-        `https://api.allorigins.win/raw?url=https://www.youtube.com/api/timedtext?v=${videoId}&lang=ko`,
-        `https://pipedapi.kavin.rocks/streams/${videoId}`
+        `https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.youtube.com/api/timedtext?v=' + videoId + '&lang=ko')}`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent('https://www.youtube.com/api/timedtext?v=' + videoId + '&lang=en')}`
       ];
 
-      for (let url of proxies) {
+      for (let url of endpoints) {
         try {
           const res = await fetch(url);
           if (!res.ok) continue;
 
-          if (url.includes('timedtext')) {
-            const xmlText = await res.text();
+          const xmlText = await res.text();
+          if (xmlText.includes('<text')) {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlText, "text/xml");
             const textNodes = xmlDoc.getElementsByTagName("text");
@@ -551,7 +545,12 @@
                 const node = textNodes[i];
                 const start = parseFloat(node.getAttribute("start"));
                 const dur = parseFloat(node.getAttribute("dur") || "4");
-                const cleanText = node.textContent.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/<[^>]*>/g, '').trim();
+                const cleanText = node.textContent
+                  .replace(/&#39;/g, "'")
+                  .replace(/&quot;/g, '"')
+                  .replace(/<[^>]*>/g, '')
+                  .trim();
+
                 if (cleanText) {
                   parsed.push({ start: start, end: start + dur, text: cleanText });
                 }
@@ -562,13 +561,16 @@
         } catch (e) {}
       }
 
-      // 기본 싱크 매핑 예시 데이터
+      // 만약 외부 자막 API 접근이 제한될 경우 시연용 비상 싱크 데이터
       return [
-        { start: 0, end: 5, text: "ILLIT (아일릿) '체포하겠어' Official MV" },
-        { start: 5, end: 12, text: "Ooh Take what you want" },
-        { start: 12, end: 18, text: "돈, 멋, 명예, Love and what?" },
-        { start: 18, end: 24, text: "Take what you want" },
-        { start: 24, end: 30, text: "적당히로는 배가 차지 않아" }
+        { start: 0, end: 5.5, text: "Ooh Take what you want" },
+        { start: 5.5, end: 11.2, text: "돈, 멋, 명예, Love and what?" },
+        { start: 11.2, end: 16.8, text: "Take what you want" },
+        { start: 16.8, end: 22.0, text: "적당히로는 배가 차지 않아" },
+        { start: 22.0, end: 27.5, text: "들이켜, yuh, 마치 하마" },
+        { start: 27.5, end: 33.0, text: "Smelling like a teen, 마치 Nirvana" },
+        { start: 33.0, end: 39.0, text: "소리쳐, yuh, cause we wanna" },
+        { start: 39.0, end: 45.0, text: "That's what we all looking for" }
       ];
     }
 
