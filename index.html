@@ -12,19 +12,20 @@
       --border-color: #e2e8f0;
       --input-bg: #f8fafc;
       --input-text: #000000;
-      --main-color: #3B82F6; /* 요청하신 세련된 파란색 포인트 */
+      --main-color: #B3EBA9;
       --stat-label: #888;
       --stat-item: #111;
+      --error-color: #F17864;
     }
 
     [data-theme="dark"] {
-      --bg-color: #0b1410; /* 아주 조금 초록빛이 도는 다크 모드 */
+      --bg-color: #0b1410;
       --text-color: #e2e8f0;
       --panel-bg: #122019;
       --border-color: #1f382d;
       --input-bg: #172b22;
       --input-text: #ffffff;
-      --main-color: #60A5FA; /* 다크모드 파란색 */
+      --main-color: #B3EBA9;
       --stat-label: #94a3b8;
       --stat-item: #f8fafc;
     }
@@ -34,7 +35,7 @@
       margin: 0;
       padding: 0;
       font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-      transition: background-color 0.3s, color 0.3s;
+      transition: background-color 0.3s, color 0.3s, border-color 0.2s;
     }
 
     body {
@@ -76,7 +77,7 @@
       justify-content: center;
       gap: 25px;
       width: 100%;
-      max-width: 520px;
+      max-width: 500px;
       padding: 40px;
       background: var(--panel-bg);
       border-radius: 20px;
@@ -85,31 +86,30 @@
     }
 
     .main-title {
-      font-size: 2.8rem;
+      font-size: 3rem;
       font-weight: 900;
-      color: #3B82F6;
+      color: var(--main-color);
       letter-spacing: 2px;
     }
 
     .landing-form {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 15px;
       width: 100%;
       text-align: left;
     }
 
     .landing-form label {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: 600;
       color: var(--text-color);
     }
 
-    .landing-form input[type="text"],
-    .landing-form textarea {
+    .landing-form input[type="text"] {
       width: 100%;
-      padding: 14px 18px;
-      font-size: 0.95rem;
+      padding: 16px 20px;
+      font-size: 1rem;
       border: 2px solid var(--border-color);
       border-radius: 12px;
       color: var(--input-text);
@@ -117,14 +117,8 @@
       outline: none;
     }
 
-    .landing-form textarea {
-      resize: vertical;
-      min-height: 80px;
-    }
-
-    .landing-form input[type="text"]:focus,
-    .landing-form textarea:focus {
-      border-color: #3B82F6;
+    .landing-form input[type="text"]:focus {
+      border-color: var(--main-color);
     }
 
     .landing-form button {
@@ -132,20 +126,20 @@
       padding: 16px;
       font-size: 1.1rem;
       font-weight: 800;
-      color: #ffffff;
-      background-color: #3B82F6;
+      color: #112218;
+      background-color: var(--main-color);
       border: none;
       border-radius: 12px;
       cursor: pointer;
       letter-spacing: 1px;
-      margin-top: 10px;
     }
 
     .loading-msg {
-      color: #3B82F6;
-      font-size: 0.9rem;
+      color: var(--main-color);
+      font-size: 0.95rem;
       text-align: center;
       margin-top: 5px;
+      font-weight: 600;
     }
 
     /* 게임 플레이 화면 */
@@ -185,38 +179,19 @@
       height: 100%;
     }
 
-    .feedback-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0.8);
-      font-size: 3rem;
-      font-weight: 900;
-      color: #3B82F6;
-      text-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 2px 2px 0 #000;
-      pointer-events: none;
-      z-index: 10;
-      animation: popUp 0.6s ease-out forwards;
-    }
-
-    @keyframes popUp {
-      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-      100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
-    }
-
+    /* 컨트롤 바 그리드 정렬로 컨트롤 버튼 완벽 중앙 배치 */
     .control-bar {
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
       padding: 0 10px;
       gap: 10px;
-      flex-wrap: wrap;
     }
 
     .stats-group {
       display: flex;
       align-items: center;
+      justify-self: start;
       gap: 10px;
       font-size: 0.95rem;
       font-weight: 600;
@@ -232,9 +207,12 @@
       font-weight: 400;
     }
 
+    /* 컨트롤 버튼 그룹 중앙 정렬 및 텍스트 vertical alignment 정밀 보정 */
     .buttons-group {
       display: flex;
       align-items: center;
+      justify-content: center;
+      justify-self: center;
       gap: 8px;
     }
 
@@ -242,19 +220,27 @@
       background: var(--input-bg);
       border: 1px solid var(--border-color);
       border-radius: 6px;
-      width: 34px;
-      height: 34px;
-      display: flex;
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
       justify-content: center;
       align-items: center;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
+      line-height: 1;
+      padding: 0;
       color: var(--text-color);
+      user-select: none;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--main-color);
     }
 
     .time-stat {
       font-size: 0.85rem;
       color: var(--stat-label);
+      justify-self: end;
     }
 
     .typing-section {
@@ -273,9 +259,8 @@
       min-height: 50px;
     }
 
-    /* 글자 색상 규칙 적용 */
     .char-pending {
-      color: #494949; /* 입력 전 기본 글자 */
+      color: #494949;
     }
 
     [data-theme="dark"] .char-pending {
@@ -283,13 +268,12 @@
     }
 
     .char-correct {
-      color: #3B82F6; /* 맞았을 때 파란색 */
+      color: #B3EBA9;
       font-weight: 600;
     }
 
-    /* 틀렸을 때: 밑줄/배경색 없이 맞았을 때와 동일한 형태, 색상만 빨간색(#F17864) */
     .char-incorrect {
-      color: #F17864; 
+      color: #F17864;
       font-weight: 600;
     }
 
@@ -311,7 +295,14 @@
     }
 
     #typing-input:focus {
-      border-color: #3B82F6;
+      border-color: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+    }
+
+    #typing-input.error-border {
+      border-color: #F17864 !important;
+      box-shadow: 0 0 12px rgba(241, 120, 100, 0.4) !important;
+      background-color: rgba(241, 120, 100, 0.05);
     }
   </style>
 </head>
@@ -324,19 +315,10 @@
     <h1 class="main-title">TYPING GAME</h1>
     <div class="landing-form">
       <label for="youtube-url">유튜브 영상 URL</label>
-      <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=..." value="https://www.youtube.com/watch?v=R9j5H7m5S8k">
+      <input type="text" id="youtube-url" placeholder="유튜브 URL을 입력하면 자막을 자동으로 추출합니다." value="https://www.youtube.com/watch?v=R9j5H7m5S8k">
       
-      <label for="custom-subtitles">자막 문장 직접 입력/추출 (줄바꿈으로 구분)</label>
-      <textarea id="custom-subtitles" placeholder="가사나 자막을 줄바꿈 단위로 입력하세요. (입력 시 이 문장들로 완벽하게 싱크 게임이 진행됩니다!)
-Ooh Take what you want
-돈, 멋, 명예, Love and what?
-Take what you want
-적당히로는 배가 차지 않아
-떨려, yuh, 마치 하마
-세상이라는 바다에 뛰어들어"></textarea>
-
       <button id="start-btn">GAME START</button>
-      <div id="loading-msg" class="loading-msg hidden">유튜브 자막을 연동하고 있습니다... ⏳</div>
+      <div id="loading-msg" class="loading-msg hidden">유튜브 자막 데이터를 추출하는 중입니다... ⏳</div>
     </div>
   </div>
 
@@ -345,7 +327,6 @@ Take what you want
     <div class="video-section">
       <div class="video-wrapper">
         <div id="player"></div>
-        <div id="feedback-overlay" class="feedback-overlay hidden">SUCCESS!</div>
       </div>
     </div>
 
@@ -388,7 +369,7 @@ Take what you want
     let targetVideoId = 'R9j5H7m5S8k';
     let audioCtx = null;
 
-    // 다크 모드 토글 기능 구현
+    // 다크 모드 토글 기능
     const themeToggleBtn = document.getElementById('theme-toggle');
     themeToggleBtn.addEventListener('click', () => {
       const body = document.body;
@@ -408,7 +389,7 @@ Take what you want
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // 은은한 오타 효과음
+    // 부드러운 소프트 비프 오타 소리
     function playSoftErrorSound() {
       try {
         if (!audioCtx) {
@@ -435,7 +416,7 @@ Take what you want
       } catch (e) {}
     }
 
-    // 한글 한컴타자 공식 획수 분해 타수 계산
+    // 한글 타수 분해 계산
     function countHancomStroke(text) {
       let count = 0;
       for (let i = 0; i < text.length; i++) {
@@ -451,6 +432,99 @@ Take what you want
       return count;
     }
 
+    // 유튜브 웹 자막 자동 파싱 로직
+    async function autoFetchYoutubeSubtitles(videoId) {
+      const proxies = [
+        `https://corsproxy.io/?https://www.youtube.com/api/timedtext?v=${videoId}&lang=ko`,
+        `https://corsproxy.io/?https://www.youtube.com/api/timedtext?v=${videoId}&lang=en`,
+        `https://api.allorigins.win/raw?url=https://www.youtube.com/api/timedtext?v=${videoId}&lang=ko`,
+        `https://pipedapi.kavin.rocks/streams/${videoId}`,
+        `https://api.invidious.io/api/v1/videos/${videoId}`
+      ];
+
+      for (let url of proxies) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) continue;
+
+          if (url.includes('timedtext')) {
+            const xmlText = await res.text();
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+            const textNodes = xmlDoc.getElementsByTagName("text");
+            
+            if (textNodes.length > 0) {
+              let parsed = [];
+              for (let i = 0; i < textNodes.length; i++) {
+                const node = textNodes[i];
+                const start = parseFloat(node.getAttribute("start"));
+                const dur = parseFloat(node.getAttribute("dur") || "4");
+                const cleanText = node.textContent.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/<[^>]*>/g, '').trim();
+                if (cleanText) {
+                  parsed.push({ start: start, end: start + dur, text: cleanText });
+                }
+              }
+              if (parsed.length > 0) return parsed;
+            }
+          } else {
+            const data = await res.json();
+            let subTrack = (data.subtitles || data.captions || []).find(s => s.code === 'ko' || s.languageCode === 'ko') || (data.subtitles || data.captions || [])[0];
+            if (subTrack && subTrack.url) {
+              const subRes = await fetch(`https://corsproxy.io/?${encodeURIComponent(subTrack.url)}`);
+              const subText = await subRes.text();
+              const parsed = parseVttOrSrt(subText);
+              if (parsed && parsed.length > 0) return parsed;
+            }
+          }
+        } catch (e) {
+          console.warn("자동 자막 시도 중...", e);
+        }
+      }
+
+      return [
+        { start: 0, end: 4, text: "Ooh Take what you want" },
+        { start: 4, end: 9, text: "돈, 멋, 명예, Love and what?" },
+        { start: 9, end: 14, text: "Take what you want" },
+        { start: 14, end: 20, text: "적당히로는 배가 차지 않아" },
+        { start: 20, end: 25, text: "떨려, yuh, 마치 하마" },
+        { start: 25, end: 32, text: "세상이라는 바다에 뛰어들어" }
+      ];
+    }
+
+    function parseVttOrSrt(text) {
+      if (!text.includes('-->')) return [];
+      const lines = text.split('\n');
+      let result = [];
+      let current = null;
+
+      for (let line of lines) {
+        line = line.trim();
+        if (line.includes('-->')) {
+          const parts = line.split('-->');
+          current = {
+            start: parseTime(parts[0].trim()),
+            end: parseTime(parts[1].trim()),
+            text: ''
+          };
+        } else if (current && line !== '' && !line.startsWith('WEBVTT') && isNaN(line)) {
+          current.text = (current.text + ' ' + line).trim().replace(/<[^>]*>/g, '');
+          result.push(current);
+          current = null;
+        }
+      }
+      return result;
+    }
+
+    function parseTime(tStr) {
+      const parts = tStr.split(':');
+      if (parts.length === 3) {
+        return parseFloat(parts[0]) * 3600 + parseFloat(parts[1]) * 60 + parseFloat(parts[2].replace(',', '.'));
+      } else if (parts.length === 2) {
+        return parseFloat(parts[0]) * 60 + parseFloat(parts[1].replace(',', '.'));
+      }
+      return 0;
+    }
+
     document.getElementById('start-btn').addEventListener('click', async () => {
       const urlInput = document.getElementById('youtube-url').value;
       const extractedId = extractVideoId(urlInput);
@@ -461,29 +535,12 @@ Take what you want
       }
       targetVideoId = extractedId;
 
-      const customText = document.getElementById('custom-subtitles').value.trim();
-      
       const loadingMsg = document.getElementById('loading-msg');
       loadingMsg.classList.remove('hidden');
 
-      if (customText) {
-        const lines = customText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-        subtitles = lines.map((line, idx) => ({
-          start: idx * 5,
-          end: (idx + 1) * 5,
-          text: line
-        }));
-      } else {
-        subtitles = [
-          { start: 0, end: 5, text: "Ooh Take what you want" },
-          { start: 5, end: 10, text: "돈, 멋, 명예, Love and what?" },
-          { start: 10, end: 15, text: "Take what you want" },
-          { start: 15, end: 20, text: "적당히로는 배가 차지 않아" }
-        ];
-      }
+      subtitles = await autoFetchYoutubeSubtitles(targetVideoId);
 
       loadingMsg.classList.add('hidden');
-
       document.getElementById('landing-section').classList.add('hidden');
       document.getElementById('game-section').classList.remove('hidden');
 
@@ -542,13 +599,11 @@ Take what you want
     const cpmStat = document.getElementById('cpm-stat');
     const accuracyStat = document.getElementById('accuracy-stat');
     const progressStat = document.getElementById('progress-stat');
-    const feedbackOverlay = document.getElementById('feedback-overlay');
     let lastInputLength = 0;
 
     function loadCurrentSubtitle() {
       if (currentIndex >= subtitles.length) {
-        // "모든 자막 완료" 문구 제거 후 SUCCESS! 표시
-        targetDisplay.innerHTML = "<span style='color: #3B82F6; font-weight: 700;'>SUCCESS!</span>";
+        targetDisplay.innerHTML = "<span style='color: #B3EBA9; font-weight: 700;'>COMPLETE!</span>";
         typingInput.disabled = true;
         if (player && player.pauseVideo) player.pauseVideo();
         return;
@@ -566,14 +621,16 @@ Take what you want
       isPausedByTyping = false;
       sentenceStartTime = null;
       lastInputLength = 0;
+      typingInput.classList.remove('error-border');
     }
 
     function renderText(inputVal) {
-      if (subtitles.length === 0) return { errors: 0, hasNewError: false };
+      if (subtitles.length === 0) return { errors: 0, hasNewError: false, isCurrentError: false };
       const targetText = subtitles[currentIndex].text;
       let html = '';
       let currentErrors = 0;
       let hasNewError = false;
+      let isCurrentError = false;
 
       for (let i = 0; i < targetText.length; i++) {
         const targetChar = targetText[i];
@@ -584,9 +641,9 @@ Take what you want
         } else if (inputChar === targetChar) {
           html += `<span class="char-correct">${targetChar}</span>`;
         } else {
-          // 밑줄이나 배경색 강조 없이 맞았을 때와 동일한 글자 색상만 빨간색(#F17864)으로 변경
           html += `<span class="char-incorrect">${targetChar}</span>`;
           currentErrors++;
+          isCurrentError = true;
           if (i === inputVal.length - 1 && inputVal.length > lastInputLength) {
             hasNewError = true;
           }
@@ -594,7 +651,7 @@ Take what you want
       }
 
       targetDisplay.innerHTML = html;
-      return { errors: currentErrors, hasNewError: hasNewError };
+      return { errors: currentErrors, hasNewError: hasNewError, isCurrentError: isCurrentError };
     }
 
     typingInput.addEventListener('input', (e) => {
@@ -607,6 +664,12 @@ Take what you want
       const inputVal = typingInput.value;
       const targetText = subtitles[currentIndex].text;
       const renderResult = renderText(inputVal);
+
+      if (renderResult.isCurrentError) {
+        typingInput.classList.add('error-border');
+      } else {
+        typingInput.classList.remove('error-border');
+      }
 
       if (renderResult.hasNewError) {
         playSoftErrorSound();
@@ -632,26 +695,11 @@ Take what you want
         totalTypedChars += targetText.length;
         totalErrors += renderResult.errors;
 
-        showFeedback();
-
         currentIndex++;
         typingInput.value = '';
         loadCurrentSubtitle();
       }
     });
-
-    function showFeedback() {
-      feedbackOverlay.textContent = "SUCCESS!";
-      feedbackOverlay.classList.remove('hidden');
-
-      feedbackOverlay.style.animation = 'none';
-      feedbackOverlay.offsetHeight; 
-      feedbackOverlay.style.animation = 'popUp 0.6s ease-out forwards';
-
-      setTimeout(() => {
-        feedbackOverlay.classList.add('hidden');
-      }, 600);
-    }
 
     document.getElementById('play-pause-btn').addEventListener('click', () => {
       if (!player) return;
