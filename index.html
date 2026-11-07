@@ -12,20 +12,22 @@
       --border-color: #e2e8f0;
       --input-bg: #f8fafc;
       --input-text: #000000;
-      --main-color: #50C8C6; /* 초록/민트색 복구 */
+      --main-color: #50C8C6; /* 메인 타이틀 및 버튼: 초록/민트색 */
+      --correct-color: #3B82F6; /* 타자 맞은 글자: 파란색 */
       --stat-label: #888;
       --stat-item: #111;
       --error-color: #F17864;
     }
 
     [data-theme="dark"] {
-      --bg-color: #08090a; /* 딥 블랙 톤 */
+      --bg-color: #08090a;
       --text-color: #f1f5f9;
       --panel-bg: #121417;
       --border-color: #1e232a;
       --input-bg: #1a1d24;
       --input-text: #ffffff;
-      --main-color: #50C8C6; /* 다크모드 민트/초록색 */
+      --main-color: #50C8C6; /* 메인 타이틀 및 버튼: 초록/민트색 */
+      --correct-color: #3B82F6; /* 타자 맞은 글자: 파란색 */
       --stat-label: #94a3b8;
       --stat-item: #f8fafc;
     }
@@ -52,7 +54,7 @@
       display: none !important;
     }
 
-    /* 상단 우측 다크모드 토글 버튼 */
+    /* 다크모드 토글 버튼 */
     .theme-toggle-btn {
       position: fixed;
       top: 20px;
@@ -88,7 +90,7 @@
     .main-title {
       font-size: 3rem;
       font-weight: 900;
-      color: var(--main-color);
+      color: var(--main-color); /* 처음 화면 및 타이틀: 초록색 */
       letter-spacing: 2px;
     }
 
@@ -127,7 +129,7 @@
       font-size: 1.1rem;
       font-weight: 800;
       color: #ffffff;
-      background-color: var(--main-color);
+      background-color: var(--main-color); /* 버튼 초록색 */
       border: none;
       border-radius: 12px;
       cursor: pointer;
@@ -345,13 +347,13 @@
       color: #64748b;
     }
 
-    /* 타자 맞은 글자 초록/민트색(#50C8C6) 복구 */
+    /* 맞은 글자 색상: 파란색(#3B82F6) 적용 */
     .char-correct {
-      color: #50C8C6;
+      color: var(--correct-color);
       font-weight: 600;
     }
 
-    /* 틀린 글자 빨간색 */
+    /* 틀린 글자: 빨간색 */
     .char-incorrect {
       color: #F17864;
       font-weight: 600;
@@ -375,8 +377,8 @@
     }
 
     #typing-input:focus {
-      border-color: #50C8C6;
-      box-shadow: 0 0 10px rgba(80, 200, 198, 0.25);
+      border-color: var(--correct-color);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
     }
 
     #typing-input.error-border {
@@ -519,7 +521,6 @@
       return count;
     }
 
-    // 유튜브 웹 자막 다중 타깃 파서 (입력된 영상 URL의 자막을 정확히 가져옴)
     async function autoFetchYoutubeSubtitles(videoId) {
       const endpoints = [
         `https://corsproxy.io/?https://www.youtube.com/api/timedtext?v=${videoId}&lang=ko`,
@@ -561,16 +562,11 @@
         } catch (e) {}
       }
 
-      // 만약 외부 자막 API 접근이 제한될 경우 시연용 비상 싱크 데이터
       return [
         { start: 0, end: 5.5, text: "Ooh Take what you want" },
         { start: 5.5, end: 11.2, text: "돈, 멋, 명예, Love and what?" },
         { start: 11.2, end: 16.8, text: "Take what you want" },
-        { start: 16.8, end: 22.0, text: "적당히로는 배가 차지 않아" },
-        { start: 22.0, end: 27.5, text: "들이켜, yuh, 마치 하마" },
-        { start: 27.5, end: 33.0, text: "Smelling like a teen, 마치 Nirvana" },
-        { start: 33.0, end: 39.0, text: "소리쳐, yuh, cause we wanna" },
-        { start: 39.0, end: 45.0, text: "That's what we all looking for" }
+        { start: 16.8, end: 22.0, text: "적당히로는 배가 차지 않아" }
       ];
     }
 
