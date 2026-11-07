@@ -26,7 +26,7 @@
       display: none !important;
     }
 
-    /* 메인 첫 화면 */
+    /* 메인 랜딩 화면 */
     .landing-container {
       display: flex;
       flex-direction: column;
@@ -131,8 +131,8 @@
       transform: translate(-50%, -50%) scale(0.8);
       font-size: 3rem;
       font-weight: 900;
-      color: #4ade80;
-      text-shadow: 0 0 20px rgba(74, 222, 128, 0.8), 2px 2px 0 #000;
+      color: #B3EBA9;
+      text-shadow: 0 0 20px rgba(179, 235, 169, 0.8), 2px 2px 0 #000;
       pointer-events: none;
       z-index: 10;
       animation: popUp 0.6s ease-out forwards;
@@ -149,6 +149,8 @@
       justify-content: space-between;
       align-items: center;
       padding: 0 10px;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     .stats-group {
@@ -171,7 +173,8 @@
 
     .buttons-group {
       display: flex;
-      gap: 6px;
+      align-items: center;
+      gap: 8px;
     }
 
     .icon-btn {
@@ -186,6 +189,21 @@
       cursor: pointer;
       font-size: 0.9rem;
       color: #494949;
+    }
+
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.85rem;
+      color: #494949;
+      margin-left: 5px;
+    }
+
+    .volume-slider {
+      width: 70px;
+      accent-color: #B3EBA9;
+      cursor: pointer;
     }
 
     .time-stat {
@@ -209,17 +227,18 @@
       min-height: 50px;
     }
 
-    /* 색상 적용 */
+    /* 색상 지정 */
     .char-pending {
-      color: #494949; /* 작성 전 기본 색상 */
+      color: #494949; /* 입력 전 기본 색상 */
     }
 
     .char-correct {
-      color: #F17864; /* 맞았을 때 색상 */
+      color: #B3EBA9; /* 맞았을 때 초록색 */
+      font-weight: 600;
     }
 
     .char-incorrect {
-      color: #F17864; /* 틀렸을 때 색상 */
+      color: #F17864; /* 틀렸을 때 빨간색 */
       text-decoration: underline;
       background-color: rgba(241, 120, 100, 0.15);
     }
@@ -242,7 +261,7 @@
     }
 
     #typing-input:focus {
-      border-color: #F17864;
+      border-color: #B3EBA9;
     }
   </style>
 </head>
@@ -253,7 +272,7 @@
     <div class="landing-form">
       <input type="text" id="youtube-url" placeholder="유튜브 영상 URL을 입력하세요" value="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
       <button id="start-btn">GAME START</button>
-      <div id="loading-msg" class="loading-msg hidden">자막을 불러오고 있습니다... ⏳</div>
+      <div id="loading-msg" class="loading-msg hidden">자막을 동기화하고 있습니다... ⏳</div>
     </div>
   </div>
 
@@ -279,6 +298,11 @@
         <button class="icon-btn" id="play-pause-btn" title="재생/일시정지">❚❚</button>
         <button class="icon-btn" id="restart-btn" title="처음부터">↺</button>
         <button class="icon-btn" id="next-btn" title="다음">〉</button>
+        
+        <div class="volume-container">
+          <span>🔊</span>
+          <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="100">
+        </div>
       </div>
       <div class="time-stat" id="time-stat">00:00 / 00:00</div>
     </div>
@@ -300,8 +324,10 @@
     let currentIndex = 0;
     let totalTypedChars = 0;
     let totalErrors = 0;
-    let startTime = null;
+    let sentenceStartTime = null;
     let isPausedByTyping = false;
+    let targetVideoId = 'dQw4w9WgXcQ';
+    let audioCtx = null;
 
     function extractVideoId(url) {
       const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -309,22 +335,83 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // 보안 에러 없이 원활하게 자막을 파싱하기 위한 안전 자막 로더
-    async function fetchSubtitles(videoId) {
+    // 거슬리지 않는 은은한 틀림 효과음 (Web Audio API)
+    function playSoftErrorSound() {
       try {
-        const res = await fetch(`https://pipedapi.kavin.rocks/streams/${videoId}`);
-        const data = await res.json();
-        if (data.subtitles && data.subtitles.length > 0) {
-          const subTrack = data.subtitles.find(s => s.code === 'ko') || data.subtitles[0];
-          const subRes = await fetch(subTrack.url);
-          const vttText = await subRes.text();
-          return parseVTT(vttText);
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sine'; // 부드러운 사인 파형
+        osc.frequency.setValueAtTime(160, audioCtx.currentTime); // 약간 낮은 부드러운 톤 (160Hz)
+        osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.08); // 살짝 떨어지는 톤
+
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime); // 거슬리지 않도록 작은 볼륨 (0.08)
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
       } catch (e) {
-        console.warn("자동 추출 우회 중 실패, 기본 자막 데이터를 활용합니다.", e);
+        // 오디오 미지원 디바이스 처리
       }
-      
-      // 영상 자막이 비활성화되었거나 가져오지 못했을 때 사용할 싱크 자막 샘플
+    }
+
+    // 한글 타수 계산 (초성, 중성, 종성 획수 분해)
+    function countHancomStroke(text) {
+      let count = 0;
+      for (let i = 0; i < text.length; i++) {
+        const code = text.charCodeAt(i);
+        if (code >= 0xAC00 && code <= 0xD7A3) {
+          const charIndex = code - 0xAC00;
+          const jong = charIndex % 28;
+          count += (jong > 0) ? 3 : 2;
+        } else {
+          count += 1;
+        }
+      }
+      return count;
+    }
+
+    async function fetchSubtitles(videoId) {
+      const apiEndpoints = [
+        `https://pipedapi.kavin.rocks/streams/${videoId}`,
+        `https://api.invidious.io/api/v1/videos/${videoId}`,
+        `https://vid.puffyan.us/api/v1/videos/${videoId}`
+      ];
+
+      for (let endpoint of apiEndpoints) {
+        try {
+          const res = await fetch(endpoint);
+          if (!res.ok) continue;
+          const data = await res.json();
+          
+          let subTrack = null;
+          if (data.subtitles && data.subtitles.length > 0) {
+            subTrack = data.subtitles.find(s => s.code === 'ko') || data.subtitles[0];
+          } else if (data.captions && data.captions.length > 0) {
+            subTrack = data.captions.find(c => c.languageCode === 'ko') || data.captions[0];
+          }
+
+          if (subTrack && subTrack.url) {
+            const subRes = await fetch(subTrack.url);
+            const subText = await subRes.text();
+            const parsed = parseSubText(subText);
+            if (parsed && parsed.length > 0) return parsed;
+          }
+        } catch (e) {
+          console.warn(`프록시 연결 시도 중...`, e);
+        }
+      }
+
+      // 자막을 완전히 추출하지 못했을 때를 위한 예시 자막 싱크 데이터
       return [
         { start: 0, end: 4, text: "I want to see the whole world," },
         { start: 4, end: 8, text: "도장 찍어, 나의 passport" },
@@ -333,30 +420,30 @@
       ];
     }
 
-    function parseVTT(vttText) {
-      const lines = vttText.split('\n');
-      let result = [];
-      let current = null;
+    function parseSubText(text) {
+      if (text.includes('-->')) {
+        const lines = text.split('\n');
+        let result = [];
+        let current = null;
 
-      for (let line of lines) {
-        line = line.trim();
-        if (line.includes('-->')) {
-          const parts = line.split('-->');
-          current = {
-            start: parseTime(parts[0].trim()),
-            end: parseTime(parts[1].trim()),
-            text: ''
-          };
-        } else if (current && line !== '' && !line.startsWith('WEBVTT') && isNaN(line)) {
-          current.text = (current.text + ' ' + line).trim().replace(/<[^>]*>/g, '');
-          result.push(current);
-          current = null;
+        for (let line of lines) {
+          line = line.trim();
+          if (line.includes('-->')) {
+            const parts = line.split('-->');
+            current = {
+              start: parseTime(parts[0].trim()),
+              end: parseTime(parts[1].trim()),
+              text: ''
+            };
+          } else if (current && line !== '' && !line.startsWith('WEBVTT') && isNaN(line)) {
+            current.text = (current.text + ' ' + line).trim().replace(/<[^>]*>/g, '');
+            result.push(current);
+            current = null;
+          }
         }
+        return result;
       }
-      return result.length > 0 ? result : [
-        { start: 0, end: 4, text: "I want to see the whole world," },
-        { start: 4, end: 8, text: "도장 찍어, 나의 passport" }
-      ];
+      return [];
     }
 
     function parseTime(tStr) {
@@ -371,17 +458,18 @@
 
     document.getElementById('start-btn').addEventListener('click', async () => {
       const urlInput = document.getElementById('youtube-url').value;
-      const videoId = extractVideoId(urlInput);
+      const extractedId = extractVideoId(urlInput);
 
-      if (!videoId) {
+      if (!extractedId) {
         alert('올바른 유튜브 URL을 입력해 주세요.');
         return;
       }
+      targetVideoId = extractedId;
 
       const loadingMsg = document.getElementById('loading-msg');
       loadingMsg.classList.remove('hidden');
 
-      subtitles = await fetchSubtitles(videoId);
+      subtitles = await fetchSubtitles(targetVideoId);
       loadingMsg.classList.add('hidden');
 
       document.getElementById('landing-section').classList.add('hidden');
@@ -391,23 +479,35 @@
         player = new YT.Player('player', {
           height: '360',
           width: '640',
-          videoId: videoId,
+          videoId: targetVideoId,
+          playerVars: {
+            'autoplay': 1,
+            'rel': 0,
+            'iv_load_policy': 3
+          },
           events: {
             'onReady': onPlayerReady
           }
         });
       } else {
-        player.loadVideoById(videoId);
-        startTime = new Date();
+        player.loadVideoById({
+          videoId: targetVideoId
+        });
         currentIndex = 0;
         loadCurrentSubtitle();
       }
     });
 
     function onPlayerReady(event) {
-      startTime = new Date();
       loadCurrentSubtitle();
       setInterval(updateTimerAndSync, 200);
+
+      const volumeSlider = document.getElementById('volume-slider');
+      volumeSlider.addEventListener('input', (e) => {
+        if (player && player.setVolume) {
+          player.setVolume(e.target.value);
+        }
+      });
     }
 
     function updateTimerAndSync() {
@@ -438,10 +538,11 @@
     const accuracyStat = document.getElementById('accuracy-stat');
     const progressStat = document.getElementById('progress-stat');
     const feedbackOverlay = document.getElementById('feedback-overlay');
+    let lastInputLength = 0;
 
     function loadCurrentSubtitle() {
       if (currentIndex >= subtitles.length) {
-        targetDisplay.innerHTML = "<span style='color: #F17864;'>🎉 모든 자막 타자를 완료하셨습니다!</span>";
+        targetDisplay.innerHTML = "<span style='color: #B3EBA9;'>🎉 모든 자막 타자를 완료하셨습니다!</span>";
         typingInput.disabled = true;
         if (player && player.pauseVideo) player.pauseVideo();
         return;
@@ -457,13 +558,16 @@
         document.getElementById('play-pause-btn').textContent = '❚❚';
       }
       isPausedByTyping = false;
+      sentenceStartTime = null;
+      lastInputLength = 0;
     }
 
     function renderText(inputVal) {
-      if (subtitles.length === 0) return 0;
+      if (subtitles.length === 0) return { errors: 0, hasNewError: false };
       const targetText = subtitles[currentIndex].text;
       let html = '';
       let currentErrors = 0;
+      let hasNewError = false;
 
       for (let i = 0; i < targetText.length; i++) {
         const targetChar = targetText[i];
@@ -476,25 +580,45 @@
         } else {
           html += `<span class="char-incorrect">${targetChar}</span>`;
           currentErrors++;
+          // 새로 타이핑해서 입력한 글자가 틀렸을 때만 효과음 1회 재생
+          if (i === inputVal.length - 1 && inputVal.length > lastInputLength) {
+            hasNewError = true;
+          }
         }
       }
 
       targetDisplay.innerHTML = html;
-      return currentErrors;
+      return { errors: currentErrors, hasNewError: hasNewError };
     }
 
     typingInput.addEventListener('input', (e) => {
       if (subtitles.length === 0) return;
+      
+      if (!sentenceStartTime) {
+        sentenceStartTime = new Date();
+      }
+
       const inputVal = typingInput.value;
       const targetText = subtitles[currentIndex].text;
-      const currentErrors = renderText(inputVal);
+      const renderResult = renderText(inputVal);
 
-      // 한컴타자 스타일 타수(타/분) 계산
-      const elapsedMinutes = (new Date() - startTime) / 60000;
-      const currentTypedCount = totalTypedChars + inputVal.length;
-      const cpm = elapsedMinutes > 0 ? Math.round(currentTypedCount / elapsedMinutes) : 0;
+      // 새로 타이핑해서 틀린 경우에만 은은한 비프음 재생 (키보드 타격음은 없음)
+      if (renderResult.hasNewError) {
+        playSoftErrorSound();
+      }
+      lastInputLength = inputVal.length;
+
+      // 한컴타자 방식 실시간 타속 계산
+      const elapsedSeconds = (new Date() - sentenceStartTime) / 1000;
+      const strokeCount = countHancomStroke(inputVal);
       
-      const totalErrCount = totalErrors + currentErrors;
+      let cpm = 0;
+      if (elapsedSeconds > 0.3) {
+        cpm = Math.round((strokeCount / elapsedSeconds) * 60);
+      }
+      
+      const currentTypedCount = totalTypedChars + inputVal.length;
+      const totalErrCount = totalErrors + renderResult.errors;
       const accuracy = currentTypedCount > 0 ? Math.max(0, Math.round(100 - (totalErrCount / currentTypedCount) * 100)) : 100;
 
       cpmStat.textContent = `${cpm}타`;
@@ -502,7 +626,7 @@
 
       if (inputVal === targetText) {
         totalTypedChars += targetText.length;
-        totalErrors += currentErrors;
+        totalErrors += renderResult.errors;
 
         showFeedback();
 
