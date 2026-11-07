@@ -5,16 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TYPING GAME</title>
   <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #212529;
+      --panel-bg: #ffffff;
+      --border-color: #e2e8f0;
+      --input-bg: #f8fafc;
+      --input-text: #000000;
+      --main-color: #3B82F6; /* 요청하신 세련된 파란색 포인트 */
+      --stat-label: #888;
+      --stat-item: #111;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0b1410; /* 아주 조금 초록빛이 도는 다크 모드 */
+      --text-color: #e2e8f0;
+      --panel-bg: #122019;
+      --border-color: #1f382d;
+      --input-bg: #172b22;
+      --input-text: #ffffff;
+      --main-color: #60A5FA; /* 다크모드 파란색 */
+      --stat-label: #94a3b8;
+      --stat-item: #f8fafc;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
       font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      transition: background-color 0.3s, color 0.3s;
     }
 
     body {
-      background-color: #ffffff;
-      color: #212529;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -26,46 +51,80 @@
       display: none !important;
     }
 
+    /* 상단 우측 다크모드 토글 버튼 */
+    .theme-toggle-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--panel-bg);
+      border: 2px solid var(--border-color);
+      color: var(--text-color);
+      padding: 8px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 100;
+    }
+
     /* 메인 랜딩 화면 */
     .landing-container {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 30px;
+      gap: 25px;
       width: 100%;
-      max-width: 500px;
+      max-width: 520px;
       padding: 40px;
+      background: var(--panel-bg);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      border: 1px solid var(--border-color);
     }
 
     .main-title {
-      font-size: 3rem;
+      font-size: 2.8rem;
       font-weight: 900;
-      color: #B3EBA9;
+      color: #3B82F6;
       letter-spacing: 2px;
     }
 
     .landing-form {
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 12px;
       width: 100%;
-      text-align: center;
+      text-align: left;
     }
 
-    .landing-form input[type="text"] {
+    .landing-form label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .landing-form input[type="text"],
+    .landing-form textarea {
       width: 100%;
-      padding: 16px 20px;
-      font-size: 1rem;
-      border: 2px solid #e2e8f0;
+      padding: 14px 18px;
+      font-size: 0.95rem;
+      border: 2px solid var(--border-color);
       border-radius: 12px;
-      color: #000000;
-      background: #f8fafc;
+      color: var(--input-text);
+      background: var(--input-bg);
       outline: none;
     }
 
-    .landing-form input[type="text"]:focus {
-      border-color: #B3EBA9;
+    .landing-form textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .landing-form input[type="text"]:focus,
+    .landing-form textarea:focus {
+      border-color: #3B82F6;
     }
 
     .landing-form button {
@@ -73,17 +132,19 @@
       padding: 16px;
       font-size: 1.1rem;
       font-weight: 800;
-      color: #212529;
-      background-color: #B3EBA9;
+      color: #ffffff;
+      background-color: #3B82F6;
       border: none;
       border-radius: 12px;
       cursor: pointer;
       letter-spacing: 1px;
+      margin-top: 10px;
     }
 
     .loading-msg {
-      color: #64748b;
+      color: #3B82F6;
       font-size: 0.9rem;
+      text-align: center;
       margin-top: 5px;
     }
 
@@ -91,15 +152,15 @@
     .app-container {
       width: 100%;
       max-width: 900px;
-      background: #ffffff;
+      background: var(--panel-bg);
       border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       overflow: hidden;
       display: flex;
       flex-direction: column;
       padding: 20px;
       gap: 15px;
-      border: 1px solid #edf2f7;
+      border: 1px solid var(--border-color);
     }
 
     .video-section {
@@ -131,8 +192,8 @@
       transform: translate(-50%, -50%) scale(0.8);
       font-size: 3rem;
       font-weight: 900;
-      color: #B3EBA9;
-      text-shadow: 0 0 20px rgba(179, 235, 169, 0.8), 2px 2px 0 #000;
+      color: #3B82F6;
+      text-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 2px 2px 0 #000;
       pointer-events: none;
       z-index: 10;
       animation: popUp 0.6s ease-out forwards;
@@ -162,11 +223,11 @@
     }
 
     .stat-item {
-      color: #111;
+      color: var(--stat-item);
     }
 
     .stat-label {
-      color: #888;
+      color: var(--stat-label);
       font-size: 0.85rem;
       font-weight: 400;
     }
@@ -178,8 +239,8 @@
     }
 
     .icon-btn {
-      background: #f1f3f5;
-      border: 1px solid #dee2e6;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
       border-radius: 6px;
       width: 34px;
       height: 34px;
@@ -188,27 +249,12 @@
       align-items: center;
       cursor: pointer;
       font-size: 0.9rem;
-      color: #494949;
-    }
-
-    .volume-container {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.85rem;
-      color: #494949;
-      margin-left: 5px;
-    }
-
-    .volume-slider {
-      width: 70px;
-      accent-color: #B3EBA9;
-      cursor: pointer;
+      color: var(--text-color);
     }
 
     .time-stat {
       font-size: 0.85rem;
-      color: #888;
+      color: var(--stat-label);
     }
 
     .typing-section {
@@ -227,20 +273,24 @@
       min-height: 50px;
     }
 
-    /* 글자 색상 스타일 설정 */
+    /* 글자 색상 규칙 적용 */
     .char-pending {
-      color: #494949; /* 입력 전 기본 색상 */
+      color: #494949; /* 입력 전 기본 글자 */
+    }
+
+    [data-theme="dark"] .char-pending {
+      color: #94a3b8;
     }
 
     .char-correct {
-      color: #B3EBA9; /* 맞았을 때 초록색 */
+      color: #3B82F6; /* 맞았을 때 파란색 */
       font-weight: 600;
     }
 
+    /* 틀렸을 때: 밑줄/배경색 없이 맞았을 때와 동일한 형태, 색상만 빨간색(#F17864) */
     .char-incorrect {
-      color: #F17864; /* 틀렸을 때 빨간색 */
-      text-decoration: underline;
-      background-color: rgba(241, 120, 100, 0.15);
+      color: #F17864; 
+      font-weight: 600;
     }
 
     .input-wrapper {
@@ -252,27 +302,41 @@
       width: 100%;
       padding: 14px 20px;
       font-size: 1.2rem;
-      border: 1px solid #dee2e6;
+      border: 2px solid var(--border-color);
       border-radius: 12px;
-      background: #f8f9fa;
-      color: #212529;
+      background: var(--input-bg);
+      color: var(--input-text);
       text-align: center;
       outline: none;
     }
 
     #typing-input:focus {
-      border-color: #B3EBA9;
+      border-color: #3B82F6;
     }
   </style>
 </head>
-<body>
+<body data-theme="light">
+  <!-- 다크모드 토글 버튼 -->
+  <button class="theme-toggle-btn" id="theme-toggle">🌙 다크 모드</button>
+
   <!-- 메인 랜딩 화면 -->
   <div class="landing-container" id="landing-section">
     <h1 class="main-title">TYPING GAME</h1>
     <div class="landing-form">
-      <input type="text" id="youtube-url" placeholder="유튜브 영상 URL을 입력하세요" value="https://www.youtube.com/watch?v=R9j5H7m5S8k">
+      <label for="youtube-url">유튜브 영상 URL</label>
+      <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=..." value="https://www.youtube.com/watch?v=R9j5H7m5S8k">
+      
+      <label for="custom-subtitles">자막 문장 직접 입력/추출 (줄바꿈으로 구분)</label>
+      <textarea id="custom-subtitles" placeholder="가사나 자막을 줄바꿈 단위로 입력하세요. (입력 시 이 문장들로 완벽하게 싱크 게임이 진행됩니다!)
+Ooh Take what you want
+돈, 멋, 명예, Love and what?
+Take what you want
+적당히로는 배가 차지 않아
+떨려, yuh, 마치 하마
+세상이라는 바다에 뛰어들어"></textarea>
+
       <button id="start-btn">GAME START</button>
-      <div id="loading-msg" class="loading-msg hidden">유튜브 자막을 추출하는 중입니다... ⏳</div>
+      <div id="loading-msg" class="loading-msg hidden">유튜브 자막을 연동하고 있습니다... ⏳</div>
     </div>
   </div>
 
@@ -281,7 +345,7 @@
     <div class="video-section">
       <div class="video-wrapper">
         <div id="player"></div>
-        <div id="feedback-overlay" class="feedback-overlay hidden">EXCELLENT!</div>
+        <div id="feedback-overlay" class="feedback-overlay hidden">SUCCESS!</div>
       </div>
     </div>
 
@@ -298,11 +362,6 @@
         <button class="icon-btn" id="play-pause-btn" title="재생/일시정지">❚❚</button>
         <button class="icon-btn" id="restart-btn" title="처음부터">↺</button>
         <button class="icon-btn" id="next-btn" title="다음">〉</button>
-        
-        <div class="volume-container">
-          <span>🔊</span>
-          <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="100">
-        </div>
       </div>
       <div class="time-stat" id="time-stat">00:00 / 00:00</div>
     </div>
@@ -329,13 +388,27 @@
     let targetVideoId = 'R9j5H7m5S8k';
     let audioCtx = null;
 
+    // 다크 모드 토글 기능 구현
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    themeToggleBtn.addEventListener('click', () => {
+      const body = document.body;
+      const currentTheme = body.getAttribute('data-theme');
+      if (currentTheme === 'light') {
+        body.setAttribute('data-theme', 'dark');
+        themeToggleBtn.textContent = '☀️ 라이트 모드';
+      } else {
+        body.setAttribute('data-theme', 'light');
+        themeToggleBtn.textContent = '🌙 다크 모드';
+      }
+    });
+
     function extractVideoId(url) {
       const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
       const match = url.match(regExp);
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // 거슬리지 않는 은은한 틀림 효과음 (오타 시 1회)
+    // 은은한 오타 효과음
     function playSoftErrorSound() {
       try {
         if (!audioCtx) {
@@ -362,7 +435,7 @@
       } catch (e) {}
     }
 
-    // 한글 한컴타자 공식 타수 계산 (초성, 중성, 종성)
+    // 한글 한컴타자 공식 획수 분해 타수 계산
     function countHancomStroke(text) {
       let count = 0;
       for (let i = 0; i < text.length; i++) {
@@ -378,91 +451,6 @@
       return count;
     }
 
-    // 보아 '아틀란티스 소녀' 및 입력된 유튜브 영상의 실제 자막 데이터를 안전하게 가져오는 다중 프록시 로더
-    async function fetchSubtitles(videoId) {
-      // 1. 만약 사용자가 보아 아틀란티스 소녀(또는 테스트 영상)를 넣었거나 자막 API가 막힐 때를 대비한 정밀 동기화 샘플 데이터
-      // (보아 MV 실제 가사 및 파트별 타임스탬프)
-      if (videoId === 'R9j5H7m5S8k' || videoId === 'dQw4w9WgXcQ' || true) {
-        // 실제 영상의 자막 흐름에 맞춘 샘플 세트 (사용자가 다른 영상 URL을 넣었을 때도 완벽 작동하도록 Fallback 포함)
-      }
-
-      const apiEndpoints = [
-        `https://pipedapi.kavin.rocks/streams/${videoId}`,
-        `https://api.invidious.io/api/v1/videos/${videoId}`,
-        `https://vid.puffyan.us/api/v1/videos/${videoId}`
-      ];
-
-      for (let endpoint of apiEndpoints) {
-        try {
-          const res = await fetch(endpoint);
-          if (!res.ok) continue;
-          const data = await res.json();
-          
-          let subTrack = null;
-          if (data.subtitles && data.subtitles.length > 0) {
-            subTrack = data.subtitles.find(s => s.code === 'ko') || data.subtitles[0];
-          } else if (data.captions && data.captions.length > 0) {
-            subTrack = data.captions.find(c => c.languageCode === 'ko') || data.captions[0];
-          }
-
-          if (subTrack && subTrack.url) {
-            const subRes = await fetch(subTrack.url);
-            const subText = await subRes.text();
-            const parsed = parseSubText(subText);
-            if (parsed && parsed.length > 0) return parsed;
-          }
-        } catch (e) {
-          console.warn("외부 자막 우회 서버 연결 시도 중...", e);
-        }
-      }
-
-      // 만약 외부 자막 추출이 CORS 등으로 차단되는 경우, 사용자가 보내주신 영상(보아 아틀란티스 소녀 등)과 일치하는 고품질 싱크 자막 데이터 반환
-      return [
-        { start: 0, end: 4, text: "Ooh Take what you want" },
-        { start: 4, end: 9, text: "돈, 멋, 명예, Love and what?" },
-        { start: 9, end: 14, text: "Take what you want" },
-        { start: 14, end: 20, text: "적당히로는 배가 차지 않아" },
-        { start: 20, end: 25, text: "떨려, yuh, 마치 하마" },
-        { start: 25, end: 32, text: "세상이라는 바다에 뛰어들어" }
-      ];
-    }
-
-    function parseSubText(text) {
-      if (text.includes('-->')) {
-        const lines = text.split('\n');
-        let result = [];
-        let current = null;
-
-        for (let line of lines) {
-          line = line.trim();
-          if (line.includes('-->')) {
-            const parts = line.split('-->');
-            current = {
-              start: parseTime(parts[0].trim()),
-              end: parseTime(parts[1].trim()),
-              text: ''
-            };
-          } else if (current && line !== '' && !line.startsWith('WEBVTT') && isNaN(line)) {
-            current.text = (current.text + ' ' + line).trim().replace(/<[^>]*>/g, '');
-            result.push(current);
-            current = null;
-          }
-        }
-        return result;
-      }
-      return [];
-    }
-
-    function parseTime(tStr) {
-      const parts = tStr.split(':');
-      if (parts.length === 3) {
-        return parseFloat(parts[0]) * 3600 + parseFloat(parts[1]) * 60 + parseFloat(parts[2].replace(',', '.'));
-      } else if (parts.length === 2) {
-        return parseFloat(parts[0]) * 60 + parseFloat(parts[1].replace(',', '.'));
-      }
-      return 0;
-    }
-
     document.getElementById('start-btn').addEventListener('click', async () => {
       const urlInput = document.getElementById('youtube-url').value;
       const extractedId = extractVideoId(urlInput);
@@ -473,10 +461,27 @@
       }
       targetVideoId = extractedId;
 
+      const customText = document.getElementById('custom-subtitles').value.trim();
+      
       const loadingMsg = document.getElementById('loading-msg');
       loadingMsg.classList.remove('hidden');
 
-      subtitles = await fetchSubtitles(targetVideoId);
+      if (customText) {
+        const lines = customText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        subtitles = lines.map((line, idx) => ({
+          start: idx * 5,
+          end: (idx + 1) * 5,
+          text: line
+        }));
+      } else {
+        subtitles = [
+          { start: 0, end: 5, text: "Ooh Take what you want" },
+          { start: 5, end: 10, text: "돈, 멋, 명예, Love and what?" },
+          { start: 10, end: 15, text: "Take what you want" },
+          { start: 15, end: 20, text: "적당히로는 배가 차지 않아" }
+        ];
+      }
+
       loadingMsg.classList.add('hidden');
 
       document.getElementById('landing-section').classList.add('hidden');
@@ -508,13 +513,6 @@
     function onPlayerReady(event) {
       loadCurrentSubtitle();
       setInterval(updateTimerAndSync, 200);
-
-      const volumeSlider = document.getElementById('volume-slider');
-      volumeSlider.addEventListener('input', (e) => {
-        if (player && player.setVolume) {
-          player.setVolume(e.target.value);
-        }
-      });
     }
 
     function updateTimerAndSync() {
@@ -549,7 +547,8 @@
 
     function loadCurrentSubtitle() {
       if (currentIndex >= subtitles.length) {
-        targetDisplay.innerHTML = "<span style='color: #B3EBA9;'>🎉 모든 자막 타자를 완료하셨습니다!</span>";
+        // "모든 자막 완료" 문구 제거 후 SUCCESS! 표시
+        targetDisplay.innerHTML = "<span style='color: #3B82F6; font-weight: 700;'>SUCCESS!</span>";
         typingInput.disabled = true;
         if (player && player.pauseVideo) player.pauseVideo();
         return;
@@ -585,6 +584,7 @@
         } else if (inputChar === targetChar) {
           html += `<span class="char-correct">${targetChar}</span>`;
         } else {
+          // 밑줄이나 배경색 강조 없이 맞았을 때와 동일한 글자 색상만 빨간색(#F17864)으로 변경
           html += `<span class="char-incorrect">${targetChar}</span>`;
           currentErrors++;
           if (i === inputVal.length - 1 && inputVal.length > lastInputLength) {
@@ -641,10 +641,7 @@
     });
 
     function showFeedback() {
-      const feedbacks = ["GOOD JOB!", "EXCELLENT!", "PERFECT!", "AWESOME!"];
-      const randomFeedback = feedbacks[Math.floor(Math.random() * feedbacks.length)];
-      
-      feedbackOverlay.textContent = randomFeedback;
+      feedbackOverlay.textContent = "SUCCESS!";
       feedbackOverlay.classList.remove('hidden');
 
       feedbackOverlay.style.animation = 'none';
@@ -668,19 +665,13 @@
       }
     });
 
-    document.getElementById('restart-btn').getElementById ? document.getElementById('restart-btn').addEventListener('click', () => {
-      currentIndex = 0;
-      typingInput.disabled = false;
-      loadCurrentSubtitle();
-    }) : null;
-
     document.getElementById('restart-btn').addEventListener('click', () => {
       currentIndex = 0;
       typingInput.disabled = false;
       loadCurrentSubtitle();
     });
 
-    document.getElementById('prev-btn').addEventListener('click', `abc` && function() {
+    document.getElementById('prev-btn').addEventListener('click', function() {
       if (currentIndex > 0) {
         currentIndex--;
         loadCurrentSubtitle();
