@@ -3,25 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube Typing Game</title>
+  <title>YouTube Sync Typing Game</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>🎬 YouTube 타자 연습 게임</h1>
-      <p>유튜브 링크와 자막(SRT/VTT)을 넣어 영상과 함께 타자를 연습해보세요!</p>
+      <h1>🎬 YouTube 자막 동기화 타자 게임</h1>
+      <p>영상 소리와 자막 속도에 맞춰 타자를 쳐보세요!</p>
     </header>
 
     <!-- 입력 섹션 -->
-    <section class="input-section">
+    <section class="input-section" id="input-section">
       <div class="input-group">
-        <label for="youtube-url">유튜브 URL</label>
-        <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=...">
+        <label for="youtube-url">유튜브 영상 URL</label>
+        <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=..." value="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
       </div>
       <div class="input-group">
         <label for="subtitle-file">자막 파일 (.srt 또는 .vtt)</label>
         <input type="file" id="subtitle-file" accept=".srt, .vtt">
+        <small style="color: #aaa; margin-top: 4px;">* 자막 파일이 없다면 샘플 자막으로 자동 진행됩니다.</small>
       </div>
       <button id="start-btn">게임 시작하기</button>
     </section>
@@ -30,20 +31,38 @@
     <main class="game-section hidden" id="game-section">
       <div class="video-wrapper">
         <div id="player"></div>
+        <!-- 굿잡 / 엑설런트 팝업 피드백 -->
+        <div id="feedback-overlay" class="feedback-overlay hidden">EXCELLENT!</div>
       </div>
 
-      <div class="typing-display">
-        <div class="target-text" id="target-text">게임 준비 완료! 엔터를 누르면 시작합니다.</div>
-        <input type="text" id="typing-input" placeholder="위 문장을 똑같이 입력하세요..." autocomplete="off">
-        <div class="stats">
-          <span>진행도: <strong id="progress">0 / 0</strong></span>
-          <span>정확도: <strong id="accuracy">100%</strong></span>
+      <div class="typing-container">
+        <!-- 목표 문장 (틀린 부분 빨간색 표시) -->
+        <div class="target-display" id="target-display">
+          <span class="placeholder">자막을 불러오는 중입니다...</span>
+        </div>
+
+        <!-- 타자 입력창 -->
+        <input type="text" id="typing-input" placeholder="위 자막에 맞춰 타자를 입력하세요..." autocomplete="off">
+
+        <!-- 실시간 통계 (타자속도, 오타율, 진행도) -->
+        <div class="stats-panel">
+          <div class="stat-box">
+            <span class="stat-label">타자 속도</span>
+            <span class="stat-value" id="wpm-val">0 <small>CPM</small></span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">오타율</span>
+            <span class="stat-value" id="error-val">0%</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">진행도</span>
+            <span class="stat-value" id="progress-val">0 / 0</span>
+          </div>
         </div>
       </div>
     </main>
   </div>
 
-  <!-- YouTube IFrame API -->
   <script src="https://www.youtube.com/iframe_api"></script>
   <script src="app.js"></script>
 </body>
