@@ -241,14 +241,12 @@
       border-radius: 12px;
       overflow: hidden;
       position: relative;
-      cursor: pointer;
     }
 
     .video-wrapper {
       position: relative;
       padding-bottom: 56.25%;
       height: 0;
-      pointer-events: none;
     }
 
     .video-wrapper iframe {
@@ -315,10 +313,22 @@
       border-color: var(--main-color);
     }
 
+    .volume-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-self: end;
+    }
+
+    .volume-slider {
+      width: 80px;
+      cursor: pointer;
+      accent-color: var(--main-color);
+    }
+
     .time-stat {
       font-size: 0.85rem;
       color: var(--stat-label);
-      justify-self: end;
     }
 
     .typing-section {
@@ -335,6 +345,7 @@
       text-align: center;
       letter-spacing: 0.5px;
       min-height: 50px;
+      color: var(--main-color);
     }
 
     .char-pending {
@@ -368,6 +379,13 @@
       outline: none;
     }
 
+    #typing-input:disabled {
+      background-color: rgba(255,255,255,0.03);
+      color: #64748b;
+      cursor: not-allowed;
+      border-color: var(--border-color);
+    }
+
     #typing-input:focus {
       border-color: var(--correct-color);
       box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
@@ -390,7 +408,7 @@
       <input type="text" id="youtube-url" placeholder="https://www.youtube.com/watch?v=..." value="https://www.youtube.com/watch?v=R9j5H7m5S8k">
       
       <button id="start-btn">GAME START</button>
-      <div id="loading-msg" class="loading-msg hidden">유튜브 영상 자막 및 타임스탬프를 가져오는 중입니다... ⏳</div>
+      <div id="loading-msg" class="loading-msg hidden">유튜브 영상 자막 및 타임스탬프를 분석하는 중입니다... ⏳</div>
     </div>
   </div>
 
@@ -408,7 +426,7 @@
   </div>
 
   <div class="app-container hidden" id="game-section">
-    <div class="video-section" id="video-click-area" title="클릭 시 현재 자막의 처음 위치로 되돌아갑니다.">
+    <div class="video-section">
       <div class="video-wrapper">
         <div id="player"></div>
       </div>
@@ -428,7 +446,11 @@
         <button class="icon-btn" id="restart-btn" title="현재 자막 처음부터">↺</button>
         <button class="icon-btn" id="next-btn" title="다음 자막">〉</button>
       </div>
-      <div class="time-stat" id="time-stat">00:00 / 00:00</div>
+      <div class="volume-group">
+        <button class="icon-btn" id="mute-btn" title="음소거">🔊</button>
+        <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="80">
+        <span class="time-stat" id="time-stat">00:00 / 00:00</span>
+      </div>
     </div>
 
     <div class="typing-section">
@@ -452,6 +474,7 @@
     let isPausedByTyping = false;
     let targetVideoId = '';
     let audioCtx = null;
+    let isIntroInterval = false; // 전주/간주 여부 체크
 
     const themeToggleBtn = document.getElementById('theme-toggle');
     themeToggleBtn.addEventListener('click', () => {
@@ -513,9 +536,8 @@
       return count;
     }
 
-    // ⭐ Vocatype 핵심 방식: 입력된 유튜브 영상 ID별로 실제 자막/가사 데이터를 동적으로 긁어오기
+    // Vocatype 스타일 자막 파싱 + 전주(Intro) 구간 판별 로직 추가
     async function fetchVocatypeSubtitles(videoId) {
-      // 1. YouTube timedtext 자막 API 프록시 호출 시도
       const proxyList = [
         `https://corsproxy.io/?https://www.youtube.com/api/timedtext?v=${videoId}&lang=ko`,
         `https://corsproxy.io/?https://www.youtube.com/api/timedtext?v=${videoId}&lang=en`,
@@ -546,34 +568,35 @@
                   .trim();
 
                 if (cleanText) {
-                  parsed.push({ start: start, end: start + dur, text: cleanText });
+                  // 첫 번째 자막 시작 시간이 5초 이후라면, 0초부터 첫 자막 전까지는 '전주(Intro)' 구간으로 판단
+                  parsed.push({ start: start, end: start + dur, text: cleanText, isVocal: true });
                 }
               }
-              if (parsed.length > 0) return parsed;
+
+              if (parsed.length > 0) {
+                // 만약 첫 자막 시작이 4초보다 뒤라면 그 앞에 전주 구간 삽입
+                if (parsed[0].start > 4.0) {
+                  parsed.unshift({ start: 0, end: parsed[0].start, text: "🎵 전주 간주 중... 음악을 감상하세요", isVocal: false });
+                }
+                return parsed;
+              }
             }
           }
         } catch (e) {}
       }
 
-      // 2. 만약 자막 트랙이 비공개인 영상일 경우, 비디오 길이를 기반으로 지능형 가사 분할 세트 매핑
-      // (어떤 유튜브 URL을 넣어도 절대 똑같은 가사가 나오지 않고 영상마다 고유 가사/구간으로 분할되도록 동적 생성)
-      const duration = (player && player.getDuration && player.getDuration() > 0) ? player.getDuration() : 180;
-      
-      // 영상 ID별 맞춤형 가사 데이터베이스 (사용자가 넣는 영상에 따라 실시간 반영)
+      // 기본 예시 영상인 경우 전주 구간 포함 가사 세트 반환
       if (videoId === 'R9j5H7m5S8k') {
         return [
-          { start: 2.0, end: 12.0, text: "Ooh Take what you want" },
-          { start: 12.0, end: 22.0, text: "돈, 멋, 명예, Love and what?" },
-          { start: 22.0, end: 32.0, text: "적당히로는 배가 차지 않아" },
-          { start: 32.0, end: 42.0, text: "들이켜, yuh, 마치 하마" }
+          { start: 0.0, end: 5.5, text: "🎵 전주 간주 중... 음악을 감상하세요", isVocal: false },
+          { start: 5.5, end: 11.2, text: "Ooh Take what you want", isVocal: true },
+          { start: 11.2, end: 16.8, text: "돈, 멋, 명예, Love and what?", isVocal: true }
         ];
       }
 
-      // 그 외 임의의 유튜브 영상 URL인 경우, 영상의 구간에 맞춘 표준 타이핑 세트 생성
       return [
-        { start: 0, end: 10.0, text: `[${videoId}] 유튜브 영상의 첫 번째 가사 구간입니다.` },
-        { start: 10.0, end: 22.0, text: "타이핑을 정확히 입력하여 다음 구간으로 넘어가세요." },
-        { start: 22.0, end: 35.0, text: "화면을 클릭하면 해당 구간의 처음으로 돌아갑니다." }
+        { start: 0.0, end: 6.0, text: "🎵 전주 간주 중... 음악을 감상하세요", isVocal: false },
+        { start: 6.0, end: 15.0, text: "유튜브 영상의 가사 구간입니다.", isVocal: true }
       ];
     }
 
@@ -609,7 +632,7 @@
               currentIndex = 0;
               totalTypedChars = 0;
               totalErrors = 0;
-              typingInput.disabled = false;
+              player.setVolume(80);
               loadCurrentSubtitle();
               setInterval(updateTimerAndSync, 100);
             }
@@ -622,7 +645,6 @@
         currentIndex = 0;
         totalTypedChars = 0;
         totalErrors = 0;
-        typingInput.disabled = false;
         loadCurrentSubtitle();
       }
       return true;
@@ -642,7 +664,30 @@
       await initGame(modalUrlInput, true);
     });
 
-    // 자막 단위 일시정지 제어
+    // 음량 조절
+    const volumeSlider = document.getElementById('volume-slider');
+    const muteBtn = document.getElementById('mute-btn');
+
+    volumeSlider.addEventListener('input', (e) => {
+      const val = e.target.value;
+      if (player && player.setVolume) player.setVolume(val);
+      muteBtn.textContent = (val == 0) ? '🔇' : '🔊';
+    });
+
+    muteBtn.addEventListener('click', () => {
+      if (!player) return;
+      if (player.isMuted()) {
+        player.unMute();
+        muteBtn.textContent = '🔊';
+        volumeSlider.value = player.getVolume();
+      } else {
+        player.mute();
+        muteBtn.textContent = '🔇';
+        volumeSlider.value = 0;
+      }
+    });
+
+    // ⭐ 핵심: 전주(isVocal: false) 구간에서는 타자 입력 불가 및 자동 진행 처리
     function updateTimerAndSync() {
       if (!player || !player.getCurrentTime || subtitles.length === 0 || currentIndex >= subtitles.length) return;
       
@@ -652,23 +697,26 @@
       document.getElementById('time-stat').textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
 
       const currentSub = subtitles[currentIndex];
+
+      // 만약 전주/간주 구간이면 사용자가 타자를 칠 수 없고, 시간이 끝나면 자동으로 다음(보컬) 구간으로 넘어감
+      if (!currentSub.isVocal) {
+        typingInput.disabled = true;
+        typingInput.placeholder = "전주/간주 구간입니다. 음악을 감상하세요 🎵";
+        
+        if (currentTime >= currentSub.end) {
+          currentIndex++;
+          loadCurrentSubtitle();
+        }
+        return;
+      }
+
+      // 보컬 구간인 경우: 자막 종료 시간에 도달하면 일시정지
       if (currentTime >= currentSub.end && !isPausedByTyping) {
         player.pauseVideo();
         isPausedByTyping = true;
         document.getElementById('play-pause-btn').textContent = '▶';
       }
     }
-
-    // 화면 클릭 시 현재 자막의 처음 구간으로 이동
-    document.getElementById('video-click-area').addEventListener('click', () => {
-      if (!player || subtitles.length === 0 || currentIndex >= subtitles.length) return;
-      const currentSub = subtitles[currentIndex];
-      
-      player.seekTo(currentSub.start);
-      player.playVideo();
-      isPausedByTyping = false;
-      document.getElementById('play-pause-btn').textContent = '❚❚';
-    });
 
     function formatTime(seconds) {
       const m = Math.floor(seconds / 60);
@@ -696,6 +744,23 @@
       renderText('');
       progressStat.textContent = `${currentIndex + 1}/${subtitles.length}`;
       
+      if (!currentSub.isVocal) {
+        // 전주 구간 시작 시 영상 재생 및 타자창 비활성화
+        typingInput.value = '';
+        typingInput.disabled = true;
+        if (player && player.seekTo) {
+          player.seekTo(currentSub.start);
+          player.playVideo();
+          document.getElementById('play-pause-btn').textContent = '❚❚';
+        }
+        return;
+      }
+
+      // 보컬 구간 진입 시 타자창 활성화
+      typingInput.disabled = false;
+      typingInput.placeholder = "이곳에 가사를 입력하세요...";
+      typingInput.focus();
+
       if (player && player.seekTo) {
         player.seekTo(currentSub.start);
         player.playVideo();
@@ -709,7 +774,13 @@
 
     function renderText(inputVal) {
       if (subtitles.length === 0) return { errors: 0, hasNewError: false, isCurrentError: false };
-      const targetText = subtitles[currentIndex].text;
+      const currentSub = subtitles[currentIndex];
+      if (!currentSub.isVocal) {
+        targetDisplay.innerHTML = `<span style="color: var(--main-color); font-weight: bold;">${currentSub.text}</span>`;
+        return { errors: 0, hasNewError: false, isCurrentError: false };
+      }
+
+      const targetText = currentSub.text;
       let html = '';
       let currentErrors = 0;
       let hasNewError = false;
@@ -738,7 +809,7 @@
     }
 
     typingInput.addEventListener('input', (e) => {
-      if (subtitles.length === 0) return;
+      if (subtitles.length === 0 || !subtitles[currentIndex].isVocal) return;
       
       if (!sentenceStartTime) {
         sentenceStartTime = new Date();
@@ -798,11 +869,8 @@
 
     document.getElementById('restart-btn').addEventListener('click', () => {
       if (!player || subtitles.length === 0) return;
-      const currentSub = subtitles[currentIndex];
-      player.seekTo(currentSub.start);
-      player.playVideo();
-      typingInput.value = '';
-      renderText('');
+      currentIndex = 0;
+      loadCurrentSubtitle();
     });
 
     document.getElementById('prev-btn').addEventListener('click', function() {
